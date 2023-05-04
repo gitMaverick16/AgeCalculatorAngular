@@ -219,3 +219,7 @@ main {
     border: 1px solid transparent;
   }
 }
+.svg-button{
+  background: none;
+  border: none;
+}

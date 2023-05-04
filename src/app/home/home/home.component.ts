@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-home',
@@ -7,48 +7,61 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  public myForm: FormGroup = this.fb.group({
-    day: ['', [ Validators.required, Validators.minLength(3) ] ],
-    month: [0, [ Validators.required, Validators.min(0) ] ],
-    year: [0, [ Validators.required, Validators.min(0) ]],
+
+  ageDays : number | undefined;
+  ageMonths : number | undefined;
+  ageYears : number | undefined;
+
+  constructor(private fb: FormBuilder){
+  }
+
+  get day(){
+    return this.formCalculator.get('day');
+  }
+  get month(){
+    return this.formCalculator.get('month');
+  }
+  get year(){
+    return this.formCalculator.get('year');
+  }
+
+  formCalculator = this.fb.group({
+    'day' : ["", [Validators.required]],
+    'month' : ["", [Validators.required]],
+    'year' : ["", [Validators.required]]
   })
 
-  constructor( private fb: FormBuilder ){}
+  // formCalculator = new FormGroup({
+  //   'day' : new FormControl("", [Validators.required]),
+  //   'month' : new FormControl("", [Validators.required]),
+  //   'year' : new FormControl("", [Validators.required])
+  // });
 
-  isValidField( field: string ): boolean | null {
-    return this.myForm.controls[field].errors
-      && this.myForm.controls[field].touched;
+  daysInMonth(month: number, year: number) {
+    return new Date(year, month + 1, 0).getDate();
   }
 
-  getFieldError( field: string ): string | null {
+  calculateAge(){
+    const birthDate = new Date(parseInt(this.year!.value!), parseInt(this.month!.value!) - 1, parseInt(this.day!.value!));
+    const currentDate = new Date();
 
-    if ( !this.myForm.controls[field] ) return null;
+  let ageYears = currentDate.getFullYear() - birthDate.getFullYear();
+  let ageMonths = currentDate.getMonth() - birthDate.getMonth();
+  let ageDays = currentDate.getDate() - birthDate.getDate();
 
-    const errors = this.myForm.controls[field].errors || {};
-
-    for (const key of Object.keys(errors) ) {
-      switch( key ) {
-        case 'required':
-          return 'Este campo es requerido';
-
-        case 'minlength':
-          return `Mínimo ${ errors['minlength'].requiredLength } caracters.`;
-      }
-    }
-
-    return null;
+  if (ageDays < 0) {
+    ageMonths--;
+    ageDays += this.daysInMonth(currentDate.getMonth(), currentDate.getFullYear());
   }
 
-  onSave():void {
+  if (ageMonths < 0) {
+    ageYears--;
+    ageMonths += 12;
+  }
+  this.ageDays = ageDays;
+  this.ageMonths = ageMonths;
+  this.ageYears = ageYears;
 
-    if ( this.myForm.invalid ) {
-      this.myForm.markAllAsTouched();
-      return;
-    }
-
-    console.log(this.myForm.value);
-
-    this.myForm.reset({ price: 0, inStorage: 0 });
-
+  console.log("Tu edad es años: "+ ageYears+ " meses: " + ageMonths + " dias: " + ageDays);
   }
 }
